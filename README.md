@@ -93,7 +93,34 @@ All three time-based effects process in parallel with independent mix controls, 
 - **AU** — macOS Audio Unit
 - **Standalone** — Run as a desktop application
 
-## Build
+## Installation
+
+### Pre-built Binaries (Recommended)
+
+Download the latest release for your platform:
+
+**[→ Download Latest Release](https://github.com/Justin-Kase/BombFX/releases/latest)**
+
+#### macOS
+1. Download `BombFX-macOS.zip`
+2. Unzip the file
+3. Copy `Bomb FX.vst3` to `~/Library/Audio/Plug-Ins/VST3/`
+4. Copy `Bomb FX.component` to `~/Library/Audio/Plug-Ins/Components/`
+5. Rescan plugins in your DAW
+
+#### Windows
+1. Download `BombFX-Windows.zip`
+2. Unzip the file
+3. Copy `Bomb FX.vst3` to `C:\Program Files\Common Files\VST3\`
+4. Rescan plugins in your DAW
+
+#### Linux
+1. Download `BombFX-Linux.zip`
+2. Unzip the file
+3. Copy `Bomb FX.vst3` to `~/.vst3/`
+4. Rescan plugins in your DAW
+
+## Build from Source
 
 ### Requirements
 

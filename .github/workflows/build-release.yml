@@ -1,0 +1,142 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+            artifact: BombFX-macOS.zip
+            
+          - name: Windows
+            os: windows-latest
+            artifact: BombFX-Windows.zip
+            
+          - name: Linux
+            os: ubuntu-latest
+            artifact: BombFX-Linux.zip
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            ladspa-sdk \
+            libcurl4-openssl-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxcomposite-dev \
+            libxcursor-dev \
+            libxcursor-dev \
+            libxext-dev \
+            libxinerama-dev \
+            libxrandr-dev \
+            libxrender-dev \
+            libwebkit2gtk-4.0-dev \
+            libglu1-mesa-dev \
+            mesa-common-dev
+      
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      
+      - name: Build
+        run: cmake --build build --config Release -j4
+      
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p package
+          cp -R ~/Library/Audio/Plug-Ins/VST3/Bomb\ FX.vst3 package/
+          cp -R ~/Library/Audio/Plug-Ins/Components/Bomb\ FX.component package/
+          cd package
+          zip -r ../BombFX-macOS.zip *
+      
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p package
+          cp -R "build/BombFX_artefacts/Release/VST3/Bomb FX.vst3" package/
+          cd package
+          7z a ../BombFX-Windows.zip *
+      
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p package
+          cp -R build/BombFX_artefacts/Release/VST3/Bomb\ FX.vst3 package/
+          cd package
+          zip -r ../BombFX-Linux.zip *
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.artifact }}
+  
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/macOS/BombFX-macOS.zip
+            artifacts/Windows/BombFX-Windows.zip
+            artifacts/Linux/BombFX-Linux.zip
+          body: |
+            # Bomb FX Release
+            
+            ## Installation
+            
+            ### macOS
+            1. Download `BombFX-macOS.zip`
+            2. Unzip and copy `Bomb FX.vst3` to `~/Library/Audio/Plug-Ins/VST3/`
+            3. Copy `Bomb FX.component` to `~/Library/Audio/Plug-Ins/Components/`
+            4. Rescan plugins in your DAW
+            
+            ### Windows
+            1. Download `BombFX-Windows.zip`
+            2. Unzip and copy `Bomb FX.vst3` to `C:\Program Files\Common Files\VST3\`
+            3. Rescan plugins in your DAW
+            
+            ### Linux
+            1. Download `BombFX-Linux.zip`
+            2. Unzip and copy `Bomb FX.vst3` to `~/.vst3/`
+            3. Rescan plugins in your DAW
+            
+            ## Features
+            - 27 factory presets
+            - User preset save/load
+            - 4 FX processors (Reverb, Delay, Chorus, Filter)
+            - Premium chrome knob UI
+            
+            See [README.md](https://github.com/Justin-Kase/BombFX/blob/main/README.md) for full documentation.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
