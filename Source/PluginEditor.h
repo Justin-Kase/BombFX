@@ -29,6 +29,9 @@ private:
     juce::Slider reverbWidthSlider;
     juce::Label reverbLabel;
     juce::Label reverbMixLabel;
+    juce::Label reverbRoomSizeLabel;
+    juce::Label reverbDampingLabel;
+    juce::Label reverbWidthLabel;
     
     // Delay controls
     juce::Slider delayMixSlider;
@@ -36,6 +39,8 @@ private:
     juce::Slider delayFeedbackSlider;
     juce::Label delayLabel;
     juce::Label delayMixLabel;
+    juce::Label delayTimeLabel;
+    juce::Label delayFeedbackLabel;
     
     // Chorus controls
     juce::Slider chorusMixSlider;
@@ -44,6 +49,9 @@ private:
     juce::Slider chorusCenterDelaySlider;
     juce::Label chorusLabel;
     juce::Label chorusMixLabel;
+    juce::Label chorusRateLabel;
+    juce::Label chorusDepthLabel;
+    juce::Label chorusCenterDelayLabel;
     
     // Filter controls
     juce::Slider filterMixSlider;
@@ -53,6 +61,10 @@ private:
     juce::ComboBox filterTypeSelector;
     juce::Label filterLabel;
     juce::Label filterMixLabel;
+    juce::Label filterCutoffLabel;
+    juce::Label filterResonanceLabel;
+    juce::Label filterDriveLabel;
+    juce::Label filterTypeLabel;
     
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> sliderAttachments;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> filterTypeAttachment;

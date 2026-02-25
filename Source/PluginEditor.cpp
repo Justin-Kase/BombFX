@@ -49,6 +49,18 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     reverbMixLabel.setColour(juce::Label::textColourId, juce::Colour(0xff8b5cf6));
     addAndMakeVisible(reverbMixLabel);
     
+    auto setupLabel = [this](juce::Label& label, const juce::String& text) {
+        label.setText(text, juce::dontSendNotification);
+        label.setFont(juce::Font(11.0f));
+        label.setJustificationType(juce::Justification::centred);
+        label.setColour(juce::Label::textColourId, juce::Colour(0xffaaaaaa));
+        addAndMakeVisible(label);
+    };
+    
+    setupLabel(reverbRoomSizeLabel, "ROOM");
+    setupLabel(reverbDampingLabel, "DAMP");
+    setupLabel(reverbWidthLabel, "WIDTH");
+    
     auto setupSlider = [this](juce::Slider& slider, const juce::String& paramID) {
         slider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
         slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
@@ -100,6 +112,9 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     delayMixLabel.setColour(juce::Label::textColourId, juce::Colour(0xff8b5cf6));
     addAndMakeVisible(delayMixLabel);
     
+    setupLabel(delayTimeLabel, "TIME");
+    setupLabel(delayFeedbackLabel, "FDBK");
+    
     setupSlider(delayTimeSlider, "delayTime");
     setupSlider(delayFeedbackSlider, "delayFeedback");
     
@@ -127,6 +142,10 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     chorusMixLabel.setJustificationType(juce::Justification::centred);
     chorusMixLabel.setColour(juce::Label::textColourId, juce::Colour(0xff8b5cf6));
     addAndMakeVisible(chorusMixLabel);
+    
+    setupLabel(chorusRateLabel, "RATE");
+    setupLabel(chorusDepthLabel, "DEPTH");
+    setupLabel(chorusCenterDelayLabel, "DELAY");
     
     setupSlider(chorusRateSlider, "chorusRate");
     setupSlider(chorusDepthSlider, "chorusDepth");
@@ -156,6 +175,11 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     filterMixLabel.setJustificationType(juce::Justification::centred);
     filterMixLabel.setColour(juce::Label::textColourId, juce::Colour(0xff8b5cf6));
     addAndMakeVisible(filterMixLabel);
+    
+    setupLabel(filterCutoffLabel, "CUTOFF");
+    setupLabel(filterResonanceLabel, "RESO");
+    setupLabel(filterDriveLabel, "DRIVE");
+    setupLabel(filterTypeLabel, "TYPE");
     
     setupSlider(filterCutoffSlider, "filterCutoff");
     setupSlider(filterResonanceSlider, "filterResonance");
@@ -194,23 +218,35 @@ void BombFXAudioProcessorEditor::populatePresets() {
     presetSelector.addItem("Small Room", 3);
     presetSelector.addItem("Vocal Plate", 4);
     presetSelector.addItem("Huge Hall", 5);
+    presetSelector.addItem("Dark Chamber", 17);
+    presetSelector.addItem("Spring Tank", 18);
     
     presetSelector.addItem("--- DELAY ---", 200);
     presetSelector.addItem("Slapback", 6);
     presetSelector.addItem("Dub Echo", 7);
     presetSelector.addItem("Ping Pong", 8);
     presetSelector.addItem("Dotted Eighth", 9);
+    presetSelector.addItem("Triplet Delay", 19);
+    presetSelector.addItem("Long Tail", 20);
     
     presetSelector.addItem("--- CHORUS ---", 300);
     presetSelector.addItem("Lush Chorus", 10);
     presetSelector.addItem("Subtle Shimmer", 11);
     presetSelector.addItem("Wide Stereo", 12);
     presetSelector.addItem("Studio Thickener", 13);
+    presetSelector.addItem("Vibrato", 21);
+    presetSelector.addItem("Ensemble", 22);
     
     presetSelector.addItem("--- COMBO ---", 400);
     presetSelector.addItem("Ambient Space", 14);
     presetSelector.addItem("Dream Machine", 15);
     presetSelector.addItem("Infinite Void", 16);
+    presetSelector.addItem("Vocal Air", 23);
+    presetSelector.addItem("Synth Pad", 24);
+    presetSelector.addItem("Guitar Shimmer", 25);
+    presetSelector.addItem("Lo-Fi Vibes", 26);
+    presetSelector.addItem("Psychedelic", 27);
+    presetSelector.addItem("Epic Drums", 28);
 }
 
 void BombFXAudioProcessorEditor::setParameterValue(const juce::String& paramID, float value) {
@@ -416,6 +452,199 @@ void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
         setParameterValue("filterMix", 0.0f);
         return;
     }
+    
+    // NEW REVERB PRESETS
+    if (presetName == "Dark Chamber") {
+        setParameterValue("reverbMix", 0.4f);
+        setParameterValue("reverbRoomSize", 0.65f);
+        setParameterValue("reverbDamping", 0.85f);
+        setParameterValue("reverbWidth", 0.9f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.2f);
+        setParameterValue("filterCutoff", 1200.0f);
+        setParameterValue("filterResonance", 0.4f);
+        setParameterValue("filterDrive", 1.5f);
+        setParameterValue("filterType", 0); // Low Pass
+        return;
+    }
+    
+    if (presetName == "Spring Tank") {
+        setParameterValue("reverbMix", 0.5f);
+        setParameterValue("reverbRoomSize", 0.4f);
+        setParameterValue("reverbDamping", 0.3f);
+        setParameterValue("reverbWidth", 0.7f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.15f);
+        setParameterValue("filterCutoff", 3500.0f);
+        setParameterValue("filterResonance", 0.6f);
+        setParameterValue("filterDrive", 2.0f);
+        setParameterValue("filterType", 2); // Band Pass
+        return;
+    }
+    
+    // NEW DELAY PRESETS
+    if (presetName == "Triplet Delay") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.42f);
+        setParameterValue("delayTime", 333.0f); // Triplet timing
+        setParameterValue("delayFeedback", 0.45f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
+    
+    if (presetName == "Long Tail") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.38f);
+        setParameterValue("delayTime", 1200.0f);
+        setParameterValue("delayFeedback", 0.75f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.18f);
+        setParameterValue("filterCutoff", 2500.0f);
+        setParameterValue("filterResonance", 0.3f);
+        setParameterValue("filterDrive", 1.2f);
+        setParameterValue("filterType", 0); // Low Pass
+        return;
+    }
+    
+    // NEW CHORUS PRESETS
+    if (presetName == "Vibrato") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.8f);
+        setParameterValue("chorusRate", 5.0f);
+        setParameterValue("chorusDepth", 0.9f);
+        setParameterValue("chorusCenterDelay", 10.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
+    
+    if (presetName == "Ensemble") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.45f);
+        setParameterValue("chorusRate", 0.6f);
+        setParameterValue("chorusDepth", 0.5f);
+        setParameterValue("chorusCenterDelay", 25.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
+    
+    // NEW COMBO PRESETS
+    if (presetName == "Vocal Air") {
+        setParameterValue("reverbMix", 0.25f);
+        setParameterValue("reverbRoomSize", 0.45f);
+        setParameterValue("reverbDamping", 0.55f);
+        setParameterValue("reverbWidth", 0.9f);
+        setParameterValue("delayMix", 0.15f);
+        setParameterValue("delayTime", 180.0f);
+        setParameterValue("delayFeedback", 0.25f);
+        setParameterValue("chorusMix", 0.12f);
+        setParameterValue("chorusRate", 0.5f);
+        setParameterValue("chorusDepth", 0.35f);
+        setParameterValue("chorusCenterDelay", 12.0f);
+        setParameterValue("filterMix", 0.12f);
+        setParameterValue("filterCutoff", 8000.0f);
+        setParameterValue("filterResonance", 0.25f);
+        setParameterValue("filterDrive", 1.0f);
+        setParameterValue("filterType", 1); // High Pass
+        return;
+    }
+    
+    if (presetName == "Synth Pad") {
+        setParameterValue("reverbMix", 0.45f);
+        setParameterValue("reverbRoomSize", 0.85f);
+        setParameterValue("reverbDamping", 0.35f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.2f);
+        setParameterValue("delayTime", 500.0f);
+        setParameterValue("delayFeedback", 0.5f);
+        setParameterValue("chorusMix", 0.35f);
+        setParameterValue("chorusRate", 1.2f);
+        setParameterValue("chorusDepth", 0.65f);
+        setParameterValue("chorusCenterDelay", 18.0f);
+        setParameterValue("filterMix", 0.25f);
+        setParameterValue("filterCutoff", 3000.0f);
+        setParameterValue("filterResonance", 0.5f);
+        setParameterValue("filterDrive", 1.0f);
+        setParameterValue("filterType", 0); // Low Pass
+        return;
+    }
+    
+    if (presetName == "Guitar Shimmer") {
+        setParameterValue("reverbMix", 0.35f);
+        setParameterValue("reverbRoomSize", 0.75f);
+        setParameterValue("reverbDamping", 0.25f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.28f);
+        setParameterValue("delayTime", 400.0f);
+        setParameterValue("delayFeedback", 0.48f);
+        setParameterValue("chorusMix", 0.22f);
+        setParameterValue("chorusRate", 1.8f);
+        setParameterValue("chorusDepth", 0.55f);
+        setParameterValue("chorusCenterDelay", 16.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
+    
+    if (presetName == "Lo-Fi Vibes") {
+        setParameterValue("reverbMix", 0.3f);
+        setParameterValue("reverbRoomSize", 0.35f);
+        setParameterValue("reverbDamping", 0.8f);
+        setParameterValue("reverbWidth", 0.6f);
+        setParameterValue("delayMix", 0.35f);
+        setParameterValue("delayTime", 350.0f);
+        setParameterValue("delayFeedback", 0.6f);
+        setParameterValue("chorusMix", 0.2f);
+        setParameterValue("chorusRate", 0.4f);
+        setParameterValue("chorusDepth", 0.7f);
+        setParameterValue("chorusCenterDelay", 20.0f);
+        setParameterValue("filterMix", 0.4f);
+        setParameterValue("filterCutoff", 1800.0f);
+        setParameterValue("filterResonance", 0.45f);
+        setParameterValue("filterDrive", 2.5f);
+        setParameterValue("filterType", 0); // Low Pass
+        return;
+    }
+    
+    if (presetName == "Psychedelic") {
+        setParameterValue("reverbMix", 0.5f);
+        setParameterValue("reverbRoomSize", 0.9f);
+        setParameterValue("reverbDamping", 0.2f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.4f);
+        setParameterValue("delayTime", 666.0f);
+        setParameterValue("delayFeedback", 0.7f);
+        setParameterValue("chorusMix", 0.4f);
+        setParameterValue("chorusRate", 3.5f);
+        setParameterValue("chorusDepth", 0.85f);
+        setParameterValue("chorusCenterDelay", 22.0f);
+        setParameterValue("filterMix", 0.3f);
+        setParameterValue("filterCutoff", 2200.0f);
+        setParameterValue("filterResonance", 0.7f);
+        setParameterValue("filterDrive", 2.0f);
+        setParameterValue("filterType", 2); // Band Pass
+        return;
+    }
+    
+    if (presetName == "Epic Drums") {
+        setParameterValue("reverbMix", 0.38f);
+        setParameterValue("reverbRoomSize", 0.8f);
+        setParameterValue("reverbDamping", 0.5f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.18f);
+        setParameterValue("delayTime", 250.0f);
+        setParameterValue("delayFeedback", 0.35f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.22f);
+        setParameterValue("filterCutoff", 4500.0f);
+        setParameterValue("filterResonance", 0.35f);
+        setParameterValue("filterDrive", 1.8f);
+        setParameterValue("filterType", 1); // High Pass
+        return;
+    }
 }
 
 BombFXAudioProcessorEditor::~BombFXAudioProcessorEditor() {
@@ -424,24 +653,63 @@ BombFXAudioProcessorEditor::~BombFXAudioProcessorEditor() {
 
 void BombFXAudioProcessorEditor::paint(juce::Graphics& g) {
     // Slick dark gradient background
-    g.fillAll(juce::Colour(0xff1a1a2e));
-    
     auto bounds = getLocalBounds();
     juce::ColourGradient gradient(
-        juce::Colour(0xff16213e), 0, 0,
-        juce::Colour(0xff0f3460), bounds.getWidth(), bounds.getHeight(),
+        juce::Colour(0xff1a1f3a), 0, 0,
+        juce::Colour(0xff0d1428), bounds.getWidth(), bounds.getHeight(),
         false);
     g.setGradientFill(gradient);
     g.fillRect(bounds);
     
-    // Draw logo in top left (70x70 box)
+    // Subtle noise texture overlay
+    g.setColour(juce::Colours::white.withAlpha(0.02f));
+    juce::Random& random = juce::Random::getSystemRandom();
+    for (int i = 0; i < 400; i++) {
+        auto x = random.nextInt(bounds.getWidth());
+        auto y = random.nextInt(bounds.getHeight());
+        g.fillRect(x, y, 1, 1);
+    }
+    
+    // Draw section backgrounds with subtle glow
+    auto drawSectionBg = [&](int x, int width) {
+        juce::Rectangle<float> rect(x + 10, 100, width - 20, getHeight() - 120);
+        g.setColour(juce::Colour(0xff1e2442).withAlpha(0.5f));
+        g.fillRoundedRectangle(rect, 8.0f);
+        
+        // Inner glow
+        g.setColour(juce::Colour(0xff8b5cf6).withAlpha(0.05f));
+        g.drawRoundedRectangle(rect.reduced(1), 8.0f, 1.5f);
+    };
+    
+    drawSectionBg(0, 275);
+    drawSectionBg(275, 255);
+    drawSectionBg(530, 255);
+    drawSectionBg(785, 315);
+    
+    // Draw logo in top left with glow
     if (logoImage.isValid()) {
         auto logoBounds = juce::Rectangle<int>(15, 10, 50, 50);
+        
+        // Glow effect
+        g.setColour(juce::Colour(0xff8b5cf6).withAlpha(0.3f));
+        g.fillEllipse(logoBounds.toFloat().expanded(5));
+        
         g.drawImage(logoImage, logoBounds.toFloat(), juce::RectanglePlacement::centred);
     }
     
-    // Title with purple accent (moved right of logo)
+    // Title with enhanced styling
     auto titleBounds = getLocalBounds().removeFromTop(70).reduced(20, 10).withTrimmedLeft(70);
+    
+    // Shadow
+    g.setColour(juce::Colours::black.withAlpha(0.5f));
+    g.setFont(juce::Font(42.0f, juce::Font::bold));
+    g.drawText("BOMB", titleBounds.translated(2, 2), juce::Justification::centredLeft);
+    
+    // Purple glow
+    g.setColour(juce::Colour(0xff8b5cf6).withAlpha(0.6f));
+    g.drawText("BOMB", titleBounds.translated(1, 1), juce::Justification::centredLeft);
+    
+    // Main text
     g.setColour(juce::Colour(0xff8b5cf6));
     g.setFont(juce::Font(40.0f, juce::Font::bold));
     g.drawText("BOMB", titleBounds, juce::Justification::centredLeft);
@@ -450,11 +718,24 @@ void BombFXAudioProcessorEditor::paint(juce::Graphics& g) {
     g.setFont(juce::Font(40.0f, juce::Font::bold));
     g.drawText("FX", titleBounds.withTrimmedLeft(120), juce::Justification::centredLeft);
     
-    // Section dividers
-    g.setColour(juce::Colour(0xff00d4ff).withAlpha(0.3f));
-    g.drawLine(280, 110, 280, getHeight() - 20, 2.0f);
-    g.drawLine(530, 110, 530, getHeight() - 20, 2.0f);
-    g.drawLine(780, 110, 780, getHeight() - 20, 2.0f);
+    // Elegant section dividers with gradient
+    auto drawDivider = [&](float x) {
+        juce::ColourGradient divGrad(
+            juce::Colour(0xff00d4ff).withAlpha(0.0f), x, 110,
+            juce::Colour(0xff00d4ff).withAlpha(0.4f), x, getHeight() / 2,
+            false);
+        divGrad.addColour(1.0, juce::Colour(0xff00d4ff).withAlpha(0.0f));
+        g.setGradientFill(divGrad);
+        g.fillRect(x - 1, 110.0f, 2.0f, static_cast<float>(getHeight() - 130));
+    };
+    
+    drawDivider(275);
+    drawDivider(530);
+    drawDivider(785);
+    
+    // Bottom accent line
+    g.setColour(juce::Colour(0xff8b5cf6).withAlpha(0.3f));
+    g.fillRect(20, getHeight() - 5, getWidth() - 40, 2);
 }
 
 void BombFXAudioProcessorEditor::resized() {
@@ -489,12 +770,18 @@ void BombFXAudioProcessorEditor::resized() {
     auto reverbKnobs = reverbContent.removeFromLeft(180);
     int knobSize = 70;
     
-    auto reverbRow1 = reverbKnobs.removeFromTop(knobSize + 30);
-    reverbRoomSizeSlider.setBounds(reverbRow1.removeFromLeft(knobSize + 10).withSizeKeepingCentre(knobSize, knobSize));
+    auto reverbRow1 = reverbKnobs.removeFromTop(knobSize + 45); // Extra space for labels
+    auto roomArea = reverbRow1.removeFromLeft(knobSize + 10);
+    reverbRoomSizeLabel.setBounds(roomArea.removeFromTop(15));
+    reverbRoomSizeSlider.setBounds(roomArea.withSizeKeepingCentre(knobSize, knobSize));
+    
+    reverbDampingLabel.setBounds(reverbRow1.removeFromTop(15));
     reverbDampingSlider.setBounds(reverbRow1.withSizeKeepingCentre(knobSize, knobSize));
     
     reverbKnobs.removeFromTop(10);
-    reverbWidthSlider.setBounds(reverbKnobs.removeFromTop(knobSize + 30).withSizeKeepingCentre(knobSize, knobSize));
+    auto widthArea = reverbKnobs.removeFromTop(knobSize + 45);
+    reverbWidthLabel.setBounds(widthArea.removeFromTop(15));
+    reverbWidthSlider.setBounds(widthArea.withSizeKeepingCentre(knobSize, knobSize));
     
     // === DELAY ===
     auto delayArea = bounds.removeFromLeft(sectionWidth);
@@ -510,8 +797,12 @@ void BombFXAudioProcessorEditor::resized() {
     
     auto delayKnobs = delayContent.removeFromLeft(180);
     
-    auto delayRow1 = delayKnobs.removeFromTop(knobSize + 30);
-    delayTimeSlider.setBounds(delayRow1.removeFromLeft(knobSize + 10).withSizeKeepingCentre(knobSize, knobSize));
+    auto delayRow1 = delayKnobs.removeFromTop(knobSize + 45);
+    auto timeArea = delayRow1.removeFromLeft(knobSize + 10);
+    delayTimeLabel.setBounds(timeArea.removeFromTop(15));
+    delayTimeSlider.setBounds(timeArea.withSizeKeepingCentre(knobSize, knobSize));
+    
+    delayFeedbackLabel.setBounds(delayRow1.removeFromTop(15));
     delayFeedbackSlider.setBounds(delayRow1.withSizeKeepingCentre(knobSize, knobSize));
     
     // === CHORUS ===
@@ -528,12 +819,18 @@ void BombFXAudioProcessorEditor::resized() {
     
     auto chorusKnobs = chorusContent.removeFromLeft(180);
     
-    auto chorusRow1 = chorusKnobs.removeFromTop(knobSize + 30);
-    chorusRateSlider.setBounds(chorusRow1.removeFromLeft(knobSize + 10).withSizeKeepingCentre(knobSize, knobSize));
+    auto chorusRow1 = chorusKnobs.removeFromTop(knobSize + 45);
+    auto rateArea = chorusRow1.removeFromLeft(knobSize + 10);
+    chorusRateLabel.setBounds(rateArea.removeFromTop(15));
+    chorusRateSlider.setBounds(rateArea.withSizeKeepingCentre(knobSize, knobSize));
+    
+    chorusDepthLabel.setBounds(chorusRow1.removeFromTop(15));
     chorusDepthSlider.setBounds(chorusRow1.withSizeKeepingCentre(knobSize, knobSize));
     
     chorusKnobs.removeFromTop(10);
-    chorusCenterDelaySlider.setBounds(chorusKnobs.removeFromTop(knobSize + 30).withSizeKeepingCentre(knobSize, knobSize));
+    auto centerDelayArea = chorusKnobs.removeFromTop(knobSize + 45);
+    chorusCenterDelayLabel.setBounds(centerDelayArea.removeFromTop(15));
+    chorusCenterDelaySlider.setBounds(centerDelayArea.withSizeKeepingCentre(knobSize, knobSize));
     
     // === FILTER ===
     auto filterArea = bounds;
@@ -550,13 +847,21 @@ void BombFXAudioProcessorEditor::resized() {
     auto filterKnobs = filterContent.removeFromLeft(180);
     
     // Filter type selector at top
-    filterTypeSelector.setBounds(filterKnobs.removeFromTop(30).reduced(5, 0));
+    auto typeArea = filterKnobs.removeFromTop(45);
+    filterTypeLabel.setBounds(typeArea.removeFromTop(15));
+    filterTypeSelector.setBounds(typeArea.reduced(5, 0));
     filterKnobs.removeFromTop(10);
     
-    auto filterRow1 = filterKnobs.removeFromTop(knobSize + 30);
-    filterCutoffSlider.setBounds(filterRow1.removeFromLeft(knobSize + 10).withSizeKeepingCentre(knobSize, knobSize));
+    auto filterRow1 = filterKnobs.removeFromTop(knobSize + 45);
+    auto cutoffArea = filterRow1.removeFromLeft(knobSize + 10);
+    filterCutoffLabel.setBounds(cutoffArea.removeFromTop(15));
+    filterCutoffSlider.setBounds(cutoffArea.withSizeKeepingCentre(knobSize, knobSize));
+    
+    filterResonanceLabel.setBounds(filterRow1.removeFromTop(15));
     filterResonanceSlider.setBounds(filterRow1.withSizeKeepingCentre(knobSize, knobSize));
     
     filterKnobs.removeFromTop(10);
-    filterDriveSlider.setBounds(filterKnobs.removeFromTop(knobSize + 30).withSizeKeepingCentre(knobSize, knobSize));
+    auto driveArea = filterKnobs.removeFromTop(knobSize + 45);
+    filterDriveLabel.setBounds(driveArea.removeFromTop(15));
+    filterDriveSlider.setBounds(driveArea.withSizeKeepingCentre(knobSize, knobSize));
 }
