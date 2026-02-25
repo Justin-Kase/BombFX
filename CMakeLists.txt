@@ -36,8 +36,25 @@ juce_add_plugin(BombFX
     AU_MAIN_TYPE kAudioUnitType_Effect
 )
 
-# Binary resources (logo)
-juce_add_binary_data(BombFXData SOURCES Resources/logo.png)
+# Binary resources (logo + presets)
+juce_add_binary_data(BombFXData SOURCES 
+    Resources/logo.png
+    Presets/Reverb/Cathedral.preset
+    Presets/Reverb/Small\ Room.preset
+    Presets/Reverb/Vocal\ Plate.preset
+    Presets/Reverb/Huge\ Hall.preset
+    Presets/Delay/Slapback.preset
+    Presets/Delay/Dub\ Echo.preset
+    Presets/Delay/Ping\ Pong.preset
+    Presets/Delay/Dotted\ Eighth.preset
+    Presets/Chorus/Lush\ Chorus.preset
+    Presets/Chorus/Subtle\ Shimmer.preset
+    Presets/Chorus/Wide\ Stereo.preset
+    Presets/Chorus/Studio\ Thickener.preset
+    Presets/Combo/Ambient\ Space.preset
+    Presets/Combo/Dream\ Machine.preset
+    Presets/Combo/Infinite\ Void.preset
+)
 
 # Source files
 target_sources(BombFX PRIVATE

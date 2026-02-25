@@ -25,8 +25,13 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     addAndMakeVisible(presetSelector);
     populatePresets();
     presetSelector.onChange = [this] {
-        if (presetSelector.getSelectedId() > 0)
-            loadPreset(presetSelector.getText());
+        int selectedId = presetSelector.getSelectedId();
+        
+        // Skip header items (IDs 100, 200, 300, 400)
+        if (selectedId > 0 && selectedId < 100) {
+            juce::String selectedText = presetSelector.getText();
+            loadPreset(selectedText);
+        }
     };
     
     auto& params = audioProcessor.getParameters();
@@ -209,114 +214,208 @@ void BombFXAudioProcessorEditor::populatePresets() {
 }
 
 void BombFXAudioProcessorEditor::setParameterValue(const juce::String& paramID, float value) {
-    if (auto* param = audioProcessor.getParameters().getParameter(paramID))
-        param->setValueNotifyingHost(param->convertTo0to1(value));
+    // Use APVTS to get and set the parameter value
+    auto& apvts = audioProcessor.getParameters();
+    
+    if (auto* param = apvts.getParameter(paramID)) {
+        if (auto* floatParam = dynamic_cast<juce::AudioParameterFloat*>(param)) {
+            *floatParam = value;
+        }
+        else if (auto* choiceParam = dynamic_cast<juce::AudioParameterChoice*>(param)) {
+            *choiceParam = static_cast<int>(value);
+        }
+    }
 }
 
 void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
-    // Handle Reset preset
+    // Hardcoded presets - fast and reliable
     if (presetName == "Reset") {
         setParameterValue("reverbMix", 0.0f);
-        setParameterValue("reverbRoomSize", 0.5f);
-        setParameterValue("reverbDamping", 0.5f);
-        setParameterValue("reverbWidth", 1.0f);
-        
         setParameterValue("delayMix", 0.0f);
-        setParameterValue("delayTime", 250.0f);
-        setParameterValue("delayFeedback", 0.4f);
-        
         setParameterValue("chorusMix", 0.0f);
-        setParameterValue("chorusRate", 1.0f);
-        setParameterValue("chorusDepth", 0.5f);
-        setParameterValue("chorusCenterDelay", 15.0f);
-        
         setParameterValue("filterMix", 0.0f);
-        setParameterValue("filterCutoff", 2000.0f);
-        setParameterValue("filterResonance", 0.3f);
-        setParameterValue("filterDrive", 1.0f);
         return;
     }
     
-    // Map preset name to category/file
-    juce::String category;
-    juce::String filename = presetName;
-    
-    if (presetName == "Cathedral" || presetName == "Small Room" || 
-        presetName == "Vocal Plate" || presetName == "Huge Hall")
-        category = "Reverb";
-    else if (presetName == "Slapback" || presetName == "Dub Echo" || 
-             presetName == "Ping Pong" || presetName == "Dotted Eighth")
-        category = "Delay";
-    else if (presetName == "Lush Chorus" || presetName == "Subtle Shimmer" || 
-             presetName == "Wide Stereo" || presetName == "Studio Thickener")
-        category = "Chorus";
-    else if (presetName == "Ambient Space" || presetName == "Dream Machine" || 
-             presetName == "Infinite Void")
-        category = "Combo";
-    else
-        return; // Header item clicked
-    
-    // Build preset file path
-    auto execPath = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
-    juce::File presetFile = execPath.getParentDirectory()
-        .getParentDirectory().getParentDirectory().getParentDirectory()
-        .getChildFile("Presets").getChildFile(category).getChildFile(filename + ".preset");
-    
-    if (!presetFile.existsAsFile())
+    // REVERB PRESETS
+    if (presetName == "Cathedral") {
+        setParameterValue("reverbMix", 0.45f);
+        setParameterValue("reverbRoomSize", 0.8f);
+        setParameterValue("reverbDamping", 0.3f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
         return;
+    }
     
-    auto xml = juce::parseXML(presetFile);
-    if (!xml)
+    if (presetName == "Small Room") {
+        setParameterValue("reverbMix", 0.3f);
+        setParameterValue("reverbRoomSize", 0.3f);
+        setParameterValue("reverbDamping", 0.7f);
+        setParameterValue("reverbWidth", 0.8f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
         return;
+    }
     
-    // Read and set each parameter using denormalized values
-    if (auto* elem = xml->getChildByName("reverbMix"))
-        setParameterValue("reverbMix", elem->getAllSubText().getFloatValue());
+    if (presetName == "Vocal Plate") {
+        setParameterValue("reverbMix", 0.35f);
+        setParameterValue("reverbRoomSize", 0.5f);
+        setParameterValue("reverbDamping", 0.6f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("reverbRoomSize"))
-        setParameterValue("reverbRoomSize", elem->getAllSubText().getFloatValue());
+    if (presetName == "Huge Hall") {
+        setParameterValue("reverbMix", 0.55f);
+        setParameterValue("reverbRoomSize", 0.95f);
+        setParameterValue("reverbDamping", 0.2f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("reverbDamping"))
-        setParameterValue("reverbDamping", elem->getAllSubText().getFloatValue());
+    // DELAY PRESETS
+    if (presetName == "Slapback") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.35f);
+        setParameterValue("delayTime", 120.0f);
+        setParameterValue("delayFeedback", 0.2f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("reverbWidth"))
-        setParameterValue("reverbWidth", elem->getAllSubText().getFloatValue());
+    if (presetName == "Dub Echo") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.5f);
+        setParameterValue("delayTime", 375.0f);
+        setParameterValue("delayFeedback", 0.7f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("delayMix"))
-        setParameterValue("delayMix", elem->getAllSubText().getFloatValue());
+    if (presetName == "Ping Pong") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.4f);
+        setParameterValue("delayTime", 500.0f);
+        setParameterValue("delayFeedback", 0.5f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("delayTime"))
-        setParameterValue("delayTime", elem->getAllSubText().getFloatValue());
+    if (presetName == "Dotted Eighth") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.45f);
+        setParameterValue("delayTime", 667.0f);
+        setParameterValue("delayFeedback", 0.4f);
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("delayFeedback"))
-        setParameterValue("delayFeedback", elem->getAllSubText().getFloatValue());
+    // CHORUS PRESETS
+    if (presetName == "Lush Chorus") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.5f);
+        setParameterValue("chorusRate", 0.8f);
+        setParameterValue("chorusDepth", 0.6f);
+        setParameterValue("chorusCenterDelay", 18.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("chorusMix"))
-        setParameterValue("chorusMix", elem->getAllSubText().getFloatValue());
+    if (presetName == "Subtle Shimmer") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.35f);
+        setParameterValue("chorusRate", 0.4f);
+        setParameterValue("chorusDepth", 0.4f);
+        setParameterValue("chorusCenterDelay", 12.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("chorusRate"))
-        setParameterValue("chorusRate", elem->getAllSubText().getFloatValue());
+    if (presetName == "Wide Stereo") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.6f);
+        setParameterValue("chorusRate", 2.5f);
+        setParameterValue("chorusDepth", 0.7f);
+        setParameterValue("chorusCenterDelay", 20.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("chorusDepth"))
-        setParameterValue("chorusDepth", elem->getAllSubText().getFloatValue());
+    if (presetName == "Studio Thickener") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("chorusMix", 0.3f);
+        setParameterValue("chorusRate", 1.5f);
+        setParameterValue("chorusDepth", 0.55f);
+        setParameterValue("chorusCenterDelay", 14.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("chorusCenterDelay"))
-        setParameterValue("chorusCenterDelay", elem->getAllSubText().getFloatValue());
+    // COMBO PRESETS
+    if (presetName == "Ambient Space") {
+        setParameterValue("reverbMix", 0.35f);
+        setParameterValue("reverbRoomSize", 0.7f);
+        setParameterValue("reverbDamping", 0.4f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.25f);
+        setParameterValue("delayTime", 450.0f);
+        setParameterValue("delayFeedback", 0.55f);
+        setParameterValue("chorusMix", 0.2f);
+        setParameterValue("chorusRate", 0.8f);
+        setParameterValue("chorusDepth", 0.5f);
+        setParameterValue("chorusCenterDelay", 15.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    // Filter defaults (not in current presets)
-    if (auto* elem = xml->getChildByName("filterMix"))
-        setParameterValue("filterMix", elem->getAllSubText().getFloatValue());
-    else
-        setParameterValue("filterMix", 0.0f); // Default: filter off
+    if (presetName == "Dream Machine") {
+        setParameterValue("reverbMix", 0.5f);
+        setParameterValue("reverbRoomSize", 0.9f);
+        setParameterValue("reverbDamping", 0.2f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.3f);
+        setParameterValue("delayTime", 600.0f);
+        setParameterValue("delayFeedback", 0.6f);
+        setParameterValue("chorusMix", 0.25f);
+        setParameterValue("chorusRate", 0.6f);
+        setParameterValue("chorusDepth", 0.7f);
+        setParameterValue("chorusCenterDelay", 20.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
     
-    if (auto* elem = xml->getChildByName("filterCutoff"))
-        setParameterValue("filterCutoff", elem->getAllSubText().getFloatValue());
-    
-    if (auto* elem = xml->getChildByName("filterResonance"))
-        setParameterValue("filterResonance", elem->getAllSubText().getFloatValue());
-    
-    if (auto* elem = xml->getChildByName("filterDrive"))
-        setParameterValue("filterDrive", elem->getAllSubText().getFloatValue());
+    if (presetName == "Infinite Void") {
+        setParameterValue("reverbMix", 0.55f);
+        setParameterValue("reverbRoomSize", 0.95f);
+        setParameterValue("reverbDamping", 0.15f);
+        setParameterValue("reverbWidth", 1.0f);
+        setParameterValue("delayMix", 0.15f);
+        setParameterValue("delayTime", 800.0f);
+        setParameterValue("delayFeedback", 0.8f);
+        setParameterValue("chorusMix", 0.3f);
+        setParameterValue("chorusRate", 0.3f);
+        setParameterValue("chorusDepth", 0.8f);
+        setParameterValue("chorusCenterDelay", 22.0f);
+        setParameterValue("filterMix", 0.0f);
+        return;
+    }
 }
 
 BombFXAudioProcessorEditor::~BombFXAudioProcessorEditor() {
