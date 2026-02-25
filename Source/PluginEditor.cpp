@@ -24,15 +24,30 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     presetSelector.setColour(juce::ComboBox::arrowColourId, juce::Colour(0xff8b5cf6));
     addAndMakeVisible(presetSelector);
     populatePresets();
+    loadUserPresets(); // Load user presets on startup
     presetSelector.onChange = [this] {
         int selectedId = presetSelector.getSelectedId();
         
-        // Skip header items (IDs 100, 200, 300, 400)
+        // Skip header items (IDs 100, 200, 300, 400, 500)
         if (selectedId > 0 && selectedId < 100) {
             juce::String selectedText = presetSelector.getText();
             loadPreset(selectedText);
         }
     };
+    
+    // Save preset button
+    savePresetButton.setButtonText("Save");
+    savePresetButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff8b5cf6));
+    savePresetButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+    savePresetButton.onClick = [this] { saveCurrentPreset(); };
+    addAndMakeVisible(savePresetButton);
+    
+    // Refresh user presets button
+    loadUserPresetsButton.setButtonText("Refresh");
+    loadUserPresetsButton.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff2a2a3e));
+    loadUserPresetsButton.setColour(juce::TextButton::textColourOffId, juce::Colour(0xff00d4ff));
+    loadUserPresetsButton.onClick = [this] { loadUserPresets(); };
+    addAndMakeVisible(loadUserPresetsButton);
     
     auto& params = audioProcessor.getParameters();
     
@@ -264,6 +279,25 @@ void BombFXAudioProcessorEditor::setParameterValue(const juce::String& paramID, 
 }
 
 void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
+    // Check if it's a user preset (try loading from file first)
+    auto presetFile = getUserPresetsDirectory().getChildFile(presetName + ".bombfx");
+    if (presetFile.existsAsFile()) {
+        auto xml = juce::parseXML(presetFile);
+        if (xml && xml->hasTagName("BombFXPreset")) {
+            // Load all attributes as parameters
+            for (int i = 0; i < xml->getNumAttributes(); ++i) {
+                auto paramName = xml->getAttributeName(i);
+                auto paramValue = xml->getAttributeValue(i);
+                
+                if (paramName != "name") {
+                    setParameterValue(paramName, paramValue.getFloatValue());
+                }
+            }
+            return;
+        }
+    }
+    
+    // Otherwise load factory preset (hardcoded)
     // Hardcoded presets - fast and reliable
     if (presetName == "Reset") {
         setParameterValue("reverbMix", 0.0f);
@@ -743,7 +777,15 @@ void BombFXAudioProcessorEditor::resized() {
     
     // Top bar for preset selector - aligned to top right
     auto topBar = bounds.removeFromTop(70).reduced(20, 15);
-    auto rightSide = topBar.removeFromRight(280); // Reserve space on right
+    
+    // Buttons on far right
+    auto buttonArea = topBar.removeFromRight(150);
+    savePresetButton.setBounds(buttonArea.removeFromLeft(70).withHeight(30));
+    buttonArea.removeFromLeft(5);
+    loadUserPresetsButton.setBounds(buttonArea.withHeight(30));
+    
+    topBar.removeFromLeft(10); // Spacing
+    auto rightSide = topBar.removeFromRight(280);
     
     presetLabel.setBounds(rightSide.removeFromLeft(70).withHeight(30));
     rightSide.removeFromLeft(10);
@@ -864,4 +906,137 @@ void BombFXAudioProcessorEditor::resized() {
     auto driveArea = filterKnobs.removeFromTop(knobSize + 45);
     filterDriveLabel.setBounds(driveArea.removeFromTop(15));
     filterDriveSlider.setBounds(driveArea.withSizeKeepingCentre(knobSize, knobSize));
+}
+
+juce::File BombFXAudioProcessorEditor::getUserPresetsDirectory() {
+    auto docs = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
+    auto presetDir = docs.getChildFile("BombFX").getChildFile("Presets");
+    if (!presetDir.exists())
+        presetDir.createDirectory();
+    return presetDir;
+}
+
+void BombFXAudioProcessorEditor::saveCurrentPreset() {
+    // Create and show alert window asynchronously
+    juce::AlertWindow::showAsync(
+        juce::MessageBoxOptions()
+            .withTitle("Save Preset")
+            .withMessage("Enter preset name:")
+            .withButton("Save")
+            .withButton("Cancel")
+            .withIconType(juce::MessageBoxIconType::NoIcon)
+            .withAssociatedComponent(this),
+        [this](int result) {
+            if (result == 0) return; // Cancelled
+            
+            // For now, use a default name based on timestamp
+            auto presetName = "My Preset " + juce::Time::getCurrentTime().formatted("%Y%m%d_%H%M%S");
+            
+            // Get current parameter values
+            juce::XmlElement preset("BombFXPreset");
+            preset.setAttribute("name", presetName);
+            
+            // Save all float parameters
+            auto& apvts = audioProcessor.getParameters();
+            
+            if (auto* p = apvts.getParameter("reverbMix"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("reverbMix", fp->get());
+            
+            if (auto* p = apvts.getParameter("reverbRoomSize"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("reverbRoomSize", fp->get());
+            
+            if (auto* p = apvts.getParameter("reverbDamping"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("reverbDamping", fp->get());
+            
+            if (auto* p = apvts.getParameter("reverbWidth"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("reverbWidth", fp->get());
+            
+            if (auto* p = apvts.getParameter("delayMix"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("delayMix", fp->get());
+            
+            if (auto* p = apvts.getParameter("delayTime"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("delayTime", fp->get());
+            
+            if (auto* p = apvts.getParameter("delayFeedback"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("delayFeedback", fp->get());
+            
+            if (auto* p = apvts.getParameter("chorusMix"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("chorusMix", fp->get());
+            
+            if (auto* p = apvts.getParameter("chorusRate"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("chorusRate", fp->get());
+            
+            if (auto* p = apvts.getParameter("chorusDepth"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("chorusDepth", fp->get());
+            
+            if (auto* p = apvts.getParameter("chorusCenterDelay"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("chorusCenterDelay", fp->get());
+            
+            if (auto* p = apvts.getParameter("filterMix"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("filterMix", fp->get());
+            
+            if (auto* p = apvts.getParameter("filterCutoff"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("filterCutoff", fp->get());
+            
+            if (auto* p = apvts.getParameter("filterResonance"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("filterResonance", fp->get());
+            
+            if (auto* p = apvts.getParameter("filterDrive"))
+                if (auto* fp = dynamic_cast<juce::AudioParameterFloat*>(p))
+                    preset.setAttribute("filterDrive", fp->get());
+            
+            if (auto* p = apvts.getParameter("filterType"))
+                if (auto* cp = dynamic_cast<juce::AudioParameterChoice*>(p))
+                    preset.setAttribute("filterType", cp->getIndex());
+            
+            // Save to file
+            auto presetFile = getUserPresetsDirectory().getChildFile(presetName + ".bombfx");
+            if (preset.writeTo(presetFile)) {
+                juce::AlertWindow::showAsync(
+                    juce::MessageBoxOptions()
+                        .withTitle("Success")
+                        .withMessage("Preset '" + presetName + "' saved!")
+                        .withButton("OK")
+                        .withIconType(juce::MessageBoxIconType::InfoIcon),
+                    nullptr);
+                
+                // Refresh the preset list
+                loadUserPresets();
+            }
+        });
+}
+
+void BombFXAudioProcessorEditor::loadUserPresets() {
+    // Clear and rebuild preset menu with user presets
+    presetSelector.clear();
+    populatePresets(); // Add factory presets
+    
+    // Find user preset files
+    auto presetDir = getUserPresetsDirectory();
+    auto presetFiles = presetDir.findChildFiles(juce::File::findFiles, false, "*.bombfx");
+    
+    if (presetFiles.size() > 0) {
+        presetSelector.addSeparator();
+        presetSelector.addItem("--- USER PRESETS ---", 500);
+        
+        // Add user presets
+        int id = 501;
+        for (const auto& file : presetFiles) {
+            presetSelector.addItem(file.getFileNameWithoutExtension(), id++);
+        }
+    }
 }

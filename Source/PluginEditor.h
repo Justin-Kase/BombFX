@@ -19,8 +19,13 @@ private:
     // Preset selector
     juce::ComboBox presetSelector;
     juce::Label presetLabel;
+    juce::TextButton savePresetButton;
+    juce::TextButton loadUserPresetsButton;
     void loadPreset(const juce::String& presetName);
     void populatePresets();
+    void saveCurrentPreset();
+    void loadUserPresets();
+    juce::File getUserPresetsDirectory();
     
     // Reverb controls
     juce::Slider reverbMixSlider;
