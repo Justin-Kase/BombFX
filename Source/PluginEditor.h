@@ -46,6 +46,8 @@ private:
     juce::Label chorusMixLabel;
     
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> sliderAttachments;
+    
+    juce::Image logoImage;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BombFXAudioProcessorEditor)
 };

@@ -5,6 +5,14 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     
     setSize(900, 550);
     
+    // Load logo
+    juce::File logoFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile)
+        .getParentDirectory().getParentDirectory().getParentDirectory().getParentDirectory()
+        .getChildFile("Resources").getChildFile("logo.png");
+    
+    if (logoFile.existsAsFile())
+        logoImage = juce::ImageFileFormat::loadFrom(logoFile);
+    
     // Apply custom look and feel
     setLookAndFeel(&customLookAndFeel);
     
@@ -258,14 +266,20 @@ void BombFXAudioProcessorEditor::paint(juce::Graphics& g) {
     g.setGradientFill(gradient);
     g.fillRect(bounds);
     
+    // Draw logo in top left
+    if (logoImage.isValid()) {
+        auto logoBounds = getLocalBounds().removeFromTop(70).removeFromLeft(100).reduced(15);
+        g.drawImage(logoImage, logoBounds.toFloat(), juce::RectanglePlacement::centred);
+    }
+    
     // Title with purple accent
+    auto titleBounds = getLocalBounds().removeFromTop(70).reduced(20, 10).withTrimmedLeft(90);
     g.setColour(juce::Colour(0xff8b5cf6));
     g.setFont(juce::Font(40.0f, juce::Font::bold));
-    g.drawText("BOMB", bounds.removeFromTop(70).reduced(20, 10), juce::Justification::centredLeft);
+    g.drawText("BOMB", titleBounds, juce::Justification::centredLeft);
     
     g.setColour(juce::Colours::white);
     g.setFont(juce::Font(40.0f, juce::Font::bold));
-    auto titleBounds = getLocalBounds().removeFromTop(70).reduced(20, 10);
     g.drawText("FX", titleBounds.withTrimmedLeft(120), juce::Justification::centredLeft);
     
     // Section dividers
