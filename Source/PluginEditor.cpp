@@ -1,17 +1,13 @@
 #include "PluginEditor.h"
+#include "BinaryData.h"
 
 BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p) {
     
     setSize(1100, 550);
     
-    // Load logo
-    juce::File logoFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile)
-        .getParentDirectory().getParentDirectory().getParentDirectory().getParentDirectory()
-        .getChildFile("Resources").getChildFile("logo.png");
-    
-    if (logoFile.existsAsFile())
-        logoImage = juce::ImageFileFormat::loadFrom(logoFile);
+    // Load logo from binary data
+    logoImage = juce::ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize);
     
     // Apply custom look and feel
     setLookAndFeel(&customLookAndFeel);
@@ -187,36 +183,60 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
 }
 
 void BombFXAudioProcessorEditor::populatePresets() {
+    presetSelector.addItem("Reset", 1);
     presetSelector.addItem("--- REVERB ---", 100);
-    presetSelector.addItem("Cathedral", 1);
-    presetSelector.addItem("Small Room", 2);
-    presetSelector.addItem("Vocal Plate", 3);
-    presetSelector.addItem("Huge Hall", 4);
+    presetSelector.addItem("Cathedral", 2);
+    presetSelector.addItem("Small Room", 3);
+    presetSelector.addItem("Vocal Plate", 4);
+    presetSelector.addItem("Huge Hall", 5);
     
     presetSelector.addItem("--- DELAY ---", 200);
-    presetSelector.addItem("Slapback", 5);
-    presetSelector.addItem("Dub Echo", 6);
-    presetSelector.addItem("Ping Pong", 7);
-    presetSelector.addItem("Dotted Eighth", 8);
+    presetSelector.addItem("Slapback", 6);
+    presetSelector.addItem("Dub Echo", 7);
+    presetSelector.addItem("Ping Pong", 8);
+    presetSelector.addItem("Dotted Eighth", 9);
     
     presetSelector.addItem("--- CHORUS ---", 300);
-    presetSelector.addItem("Lush Chorus", 9);
-    presetSelector.addItem("Subtle Shimmer", 10);
-    presetSelector.addItem("Wide Stereo", 11);
-    presetSelector.addItem("Studio Thickener", 12);
+    presetSelector.addItem("Lush Chorus", 10);
+    presetSelector.addItem("Subtle Shimmer", 11);
+    presetSelector.addItem("Wide Stereo", 12);
+    presetSelector.addItem("Studio Thickener", 13);
     
     presetSelector.addItem("--- COMBO ---", 400);
-    presetSelector.addItem("Ambient Space", 13);
-    presetSelector.addItem("Dream Machine", 14);
-    presetSelector.addItem("Infinite Void", 15);
+    presetSelector.addItem("Ambient Space", 14);
+    presetSelector.addItem("Dream Machine", 15);
+    presetSelector.addItem("Infinite Void", 16);
 }
 
 void BombFXAudioProcessorEditor::setParameterValue(const juce::String& paramID, float value) {
     if (auto* param = audioProcessor.getParameters().getParameter(paramID))
-        param->setValueNotifyingHost(value);
+        param->setValueNotifyingHost(param->convertTo0to1(value));
 }
 
 void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
+    // Handle Reset preset
+    if (presetName == "Reset") {
+        setParameterValue("reverbMix", 0.0f);
+        setParameterValue("reverbRoomSize", 0.5f);
+        setParameterValue("reverbDamping", 0.5f);
+        setParameterValue("reverbWidth", 1.0f);
+        
+        setParameterValue("delayMix", 0.0f);
+        setParameterValue("delayTime", 250.0f);
+        setParameterValue("delayFeedback", 0.4f);
+        
+        setParameterValue("chorusMix", 0.0f);
+        setParameterValue("chorusRate", 1.0f);
+        setParameterValue("chorusDepth", 0.5f);
+        setParameterValue("chorusCenterDelay", 15.0f);
+        
+        setParameterValue("filterMix", 0.0f);
+        setParameterValue("filterCutoff", 2000.0f);
+        setParameterValue("filterResonance", 0.3f);
+        setParameterValue("filterDrive", 1.0f);
+        return;
+    }
+    
     // Map preset name to category/file
     juce::String category;
     juce::String filename = presetName;
@@ -249,7 +269,7 @@ void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
     if (!xml)
         return;
     
-    // Read and set each parameter - this will update both audio processor and UI
+    // Read and set each parameter using denormalized values
     if (auto* elem = xml->getChildByName("reverbMix"))
         setParameterValue("reverbMix", elem->getAllSubText().getFloatValue());
     
@@ -266,22 +286,37 @@ void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
         setParameterValue("delayMix", elem->getAllSubText().getFloatValue());
     
     if (auto* elem = xml->getChildByName("delayTime"))
-        setParameterValue("delayTime", elem->getAllSubText().getFloatValue() / 2000.0f); // Normalize to 0-1
+        setParameterValue("delayTime", elem->getAllSubText().getFloatValue());
     
     if (auto* elem = xml->getChildByName("delayFeedback"))
-        setParameterValue("delayFeedback", elem->getAllSubText().getFloatValue() / 0.95f); // Normalize to 0-1
+        setParameterValue("delayFeedback", elem->getAllSubText().getFloatValue());
     
     if (auto* elem = xml->getChildByName("chorusMix"))
         setParameterValue("chorusMix", elem->getAllSubText().getFloatValue());
     
     if (auto* elem = xml->getChildByName("chorusRate"))
-        setParameterValue("chorusRate", (elem->getAllSubText().getFloatValue() - 0.1f) / 9.9f); // Normalize to 0-1
+        setParameterValue("chorusRate", elem->getAllSubText().getFloatValue());
     
     if (auto* elem = xml->getChildByName("chorusDepth"))
         setParameterValue("chorusDepth", elem->getAllSubText().getFloatValue());
     
     if (auto* elem = xml->getChildByName("chorusCenterDelay"))
-        setParameterValue("chorusCenterDelay", (elem->getAllSubText().getFloatValue() - 7.0f) / 23.0f); // Normalize to 0-1
+        setParameterValue("chorusCenterDelay", elem->getAllSubText().getFloatValue());
+    
+    // Filter defaults (not in current presets)
+    if (auto* elem = xml->getChildByName("filterMix"))
+        setParameterValue("filterMix", elem->getAllSubText().getFloatValue());
+    else
+        setParameterValue("filterMix", 0.0f); // Default: filter off
+    
+    if (auto* elem = xml->getChildByName("filterCutoff"))
+        setParameterValue("filterCutoff", elem->getAllSubText().getFloatValue());
+    
+    if (auto* elem = xml->getChildByName("filterResonance"))
+        setParameterValue("filterResonance", elem->getAllSubText().getFloatValue());
+    
+    if (auto* elem = xml->getChildByName("filterDrive"))
+        setParameterValue("filterDrive", elem->getAllSubText().getFloatValue());
 }
 
 BombFXAudioProcessorEditor::~BombFXAudioProcessorEditor() {
@@ -300,14 +335,14 @@ void BombFXAudioProcessorEditor::paint(juce::Graphics& g) {
     g.setGradientFill(gradient);
     g.fillRect(bounds);
     
-    // Draw logo in top left
+    // Draw logo in top left (70x70 box)
     if (logoImage.isValid()) {
-        auto logoBounds = getLocalBounds().removeFromTop(70).removeFromLeft(100).reduced(15);
+        auto logoBounds = juce::Rectangle<int>(15, 10, 50, 50);
         g.drawImage(logoImage, logoBounds.toFloat(), juce::RectanglePlacement::centred);
     }
     
-    // Title with purple accent
-    auto titleBounds = getLocalBounds().removeFromTop(70).reduced(20, 10).withTrimmedLeft(90);
+    // Title with purple accent (moved right of logo)
+    auto titleBounds = getLocalBounds().removeFromTop(70).reduced(20, 10).withTrimmedLeft(70);
     g.setColour(juce::Colour(0xff8b5cf6));
     g.setFont(juce::Font(40.0f, juce::Font::bold));
     g.drawText("BOMB", titleBounds, juce::Justification::centredLeft);
@@ -326,13 +361,13 @@ void BombFXAudioProcessorEditor::paint(juce::Graphics& g) {
 void BombFXAudioProcessorEditor::resized() {
     auto bounds = getLocalBounds();
     
-    // Top bar for preset selector
+    // Top bar for preset selector - aligned to top right
     auto topBar = bounds.removeFromTop(70).reduced(20, 15);
-    topBar.removeFromLeft(200); // Skip title area
+    auto rightSide = topBar.removeFromRight(280); // Reserve space on right
     
-    presetLabel.setBounds(topBar.removeFromLeft(70));
-    topBar.removeFromLeft(10);
-    presetSelector.setBounds(topBar.removeFromLeft(200).withHeight(30));
+    presetLabel.setBounds(rightSide.removeFromLeft(70).withHeight(30));
+    rightSide.removeFromLeft(10);
+    presetSelector.setBounds(rightSide.withHeight(30));
     
     bounds.removeFromTop(40); // Spacing
     bounds.reduce(20, 20);

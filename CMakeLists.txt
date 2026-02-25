@@ -36,6 +36,9 @@ juce_add_plugin(BombFX
     AU_MAIN_TYPE kAudioUnitType_Effect
 )
 
+# Binary resources (logo)
+juce_add_binary_data(BombFXData SOURCES Resources/logo.png)
+
 # Source files
 target_sources(BombFX PRIVATE
     Source/PluginProcessor.cpp
@@ -60,6 +63,7 @@ target_link_libraries(BombFX
         juce::juce_audio_utils
         juce::juce_dsp
         juce::juce_gui_extra
+        BombFXData
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
