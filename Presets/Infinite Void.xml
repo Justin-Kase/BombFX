@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<PARAMETERS reverbMix="0.55" reverbRoomSize="0.95" reverbDamping="0.15" reverbWidth="1.0"
-            delayMix="0.15" delayTime="800.0" delayFeedback="0.8"
-            chorusMix="0.3" chorusRate="0.3" chorusDepth="0.8" chorusCenterDelay="22.0"/>

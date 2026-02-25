@@ -137,37 +137,109 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
 }
 
 void BombFXAudioProcessorEditor::populatePresets() {
+    presetSelector.addItem("--- REVERB ---", 100);
     presetSelector.addItem("Cathedral", 1);
     presetSelector.addItem("Small Room", 2);
-    presetSelector.addItem("Slapback", 3);
-    presetSelector.addItem("Dub Echo", 4);
-    presetSelector.addItem("Lush Chorus", 5);
-    presetSelector.addItem("Subtle Shimmer", 6);
-    presetSelector.addItem("Ambient Space", 7);
-    presetSelector.addItem("Dream Machine", 8);
-    presetSelector.addItem("Psychedelic", 9);
-    presetSelector.addItem("Vocal Plate", 10);
-    presetSelector.addItem("Ping Pong Madness", 11);
-    presetSelector.addItem("Infinite Void", 12);
-    presetSelector.addItem("Studio Thickener", 13);
-    presetSelector.addItem("Tight & Punchy", 14);
+    presetSelector.addItem("Vocal Plate", 3);
+    presetSelector.addItem("Huge Hall", 4);
+    
+    presetSelector.addItem("--- DELAY ---", 200);
+    presetSelector.addItem("Slapback", 5);
+    presetSelector.addItem("Dub Echo", 6);
+    presetSelector.addItem("Ping Pong", 7);
+    presetSelector.addItem("Dotted Eighth", 8);
+    
+    presetSelector.addItem("--- CHORUS ---", 300);
+    presetSelector.addItem("Lush Chorus", 9);
+    presetSelector.addItem("Subtle Shimmer", 10);
+    presetSelector.addItem("Wide Stereo", 11);
+    presetSelector.addItem("Studio Thickener", 12);
+    
+    presetSelector.addItem("--- COMBO ---", 400);
+    presetSelector.addItem("Ambient Space", 13);
+    presetSelector.addItem("Dream Machine", 14);
+    presetSelector.addItem("Infinite Void", 15);
 }
 
 void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
-    juce::File presetFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile)
+    // Map preset name to category/file
+    juce::String category;
+    juce::String filename = presetName;
+    
+    if (presetName == "Cathedral" || presetName == "Small Room" || 
+        presetName == "Vocal Plate" || presetName == "Huge Hall")
+        category = "Reverb";
+    else if (presetName == "Slapback" || presetName == "Dub Echo" || 
+             presetName == "Ping Pong" || presetName == "Dotted Eighth")
+        category = "Delay";
+    else if (presetName == "Lush Chorus" || presetName == "Subtle Shimmer" || 
+             presetName == "Wide Stereo" || presetName == "Studio Thickener")
+        category = "Chorus";
+    else if (presetName == "Ambient Space" || presetName == "Dream Machine" || 
+             presetName == "Infinite Void")
+        category = "Combo";
+    else
+        return; // Header item clicked
+    
+    // Build preset file path
+    auto execPath = juce::File::getSpecialLocation(juce::File::currentExecutableFile);
+    juce::File presetFile = execPath.getParentDirectory()
         .getParentDirectory().getParentDirectory().getParentDirectory()
-        .getChildFile("Presets").getChildFile(presetName + ".xml");
+        .getChildFile("Presets").getChildFile(category).getChildFile(filename + ".preset");
     
     if (!presetFile.existsAsFile())
         return;
     
     auto xml = juce::parseXML(presetFile);
-    if (xml) {
-        auto& params = audioProcessor.getParameters();
-        auto state = juce::ValueTree::fromXml(*xml);
-        if (state.isValid())
-            params.replaceState(state);
-    }
+    if (!xml)
+        return;
+    
+    auto& params = audioProcessor.getParameters();
+    
+    // Manually read each parameter from XML
+    if (auto* reverbMix = xml->getChildByName("reverbMix"))
+        if (auto* param = params.getParameter("reverbMix"))
+            param->setValueNotifyingHost(reverbMix->getAllSubText().getFloatValue());
+    
+    if (auto* reverbRoomSize = xml->getChildByName("reverbRoomSize"))
+        if (auto* param = params.getParameter("reverbRoomSize"))
+            param->setValueNotifyingHost(reverbRoomSize->getAllSubText().getFloatValue());
+    
+    if (auto* reverbDamping = xml->getChildByName("reverbDamping"))
+        if (auto* param = params.getParameter("reverbDamping"))
+            param->setValueNotifyingHost(reverbDamping->getAllSubText().getFloatValue());
+    
+    if (auto* reverbWidth = xml->getChildByName("reverbWidth"))
+        if (auto* param = params.getParameter("reverbWidth"))
+            param->setValueNotifyingHost(reverbWidth->getAllSubText().getFloatValue());
+    
+    if (auto* delayMix = xml->getChildByName("delayMix"))
+        if (auto* param = params.getParameter("delayMix"))
+            param->setValueNotifyingHost(delayMix->getAllSubText().getFloatValue());
+    
+    if (auto* delayTime = xml->getChildByName("delayTime"))
+        if (auto* param = params.getParameter("delayTime"))
+            param->setValueNotifyingHost(delayTime->getAllSubText().getFloatValue() / 2000.0f); // Normalize
+    
+    if (auto* delayFeedback = xml->getChildByName("delayFeedback"))
+        if (auto* param = params.getParameter("delayFeedback"))
+            param->setValueNotifyingHost(delayFeedback->getAllSubText().getFloatValue());
+    
+    if (auto* chorusMix = xml->getChildByName("chorusMix"))
+        if (auto* param = params.getParameter("chorusMix"))
+            param->setValueNotifyingHost(chorusMix->getAllSubText().getFloatValue());
+    
+    if (auto* chorusRate = xml->getChildByName("chorusRate"))
+        if (auto* param = params.getParameter("chorusRate"))
+            param->setValueNotifyingHost((chorusRate->getAllSubText().getFloatValue() - 0.1f) / 9.9f); // Normalize
+    
+    if (auto* chorusDepth = xml->getChildByName("chorusDepth"))
+        if (auto* param = params.getParameter("chorusDepth"))
+            param->setValueNotifyingHost(chorusDepth->getAllSubText().getFloatValue());
+    
+    if (auto* chorusCenterDelay = xml->getChildByName("chorusCenterDelay"))
+        if (auto* param = params.getParameter("chorusCenterDelay"))
+            param->setValueNotifyingHost((chorusCenterDelay->getAllSubText().getFloatValue() - 7.0f) / 23.0f); // Normalize
 }
 
 BombFXAudioProcessorEditor::~BombFXAudioProcessorEditor() {

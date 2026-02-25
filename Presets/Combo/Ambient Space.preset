@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<reverbMix>0.35</reverbMix>
+<reverbRoomSize>0.7</reverbRoomSize>
+<reverbDamping>0.4</reverbDamping>
+<reverbWidth>1.0</reverbWidth>
+<delayMix>0.25</delayMix>
+<delayTime>450.0</delayTime>
+<delayFeedback>0.55</delayFeedback>
+<chorusMix>0.2</chorusMix>
+<chorusRate>0.8</chorusRate>
+<chorusDepth>0.5</chorusDepth>
+<chorusCenterDelay>15.0</chorusCenterDelay>
