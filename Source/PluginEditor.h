@@ -1,0 +1,39 @@
+#pragma once
+#include <JuceHeader.h>
+#include "PluginProcessor.h"
+
+class BombFXAudioProcessorEditor : public juce::AudioProcessorEditor {
+public:
+    BombFXAudioProcessorEditor(BombFXAudioProcessor&);
+    ~BombFXAudioProcessorEditor() override;
+
+    void paint(juce::Graphics&) override;
+    void resized() override;
+
+private:
+    BombFXAudioProcessor& audioProcessor;
+    
+    // Reverb controls
+    juce::Slider reverbMixSlider;
+    juce::Slider reverbRoomSizeSlider;
+    juce::Slider reverbDampingSlider;
+    juce::Slider reverbWidthSlider;
+    juce::Label reverbLabel;
+    
+    // Delay controls
+    juce::Slider delayMixSlider;
+    juce::Slider delayTimeSlider;
+    juce::Slider delayFeedbackSlider;
+    juce::Label delayLabel;
+    
+    // Chorus controls
+    juce::Slider chorusMixSlider;
+    juce::Slider chorusRateSlider;
+    juce::Slider chorusDepthSlider;
+    juce::Slider chorusCenterDelaySlider;
+    juce::Label chorusLabel;
+    
+    std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> sliderAttachments;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BombFXAudioProcessorEditor)
+};
