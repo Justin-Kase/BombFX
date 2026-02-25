@@ -5,19 +5,23 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     
     setSize(800, 500);
     
+    // Apply custom look and feel
+    setLookAndFeel(&customLookAndFeel);
+    
     auto& params = audioProcessor.getParameters();
     
     // === REVERB ===
     reverbLabel.setText("REVERB", juce::dontSendNotification);
     reverbLabel.setFont(juce::Font(20.0f, juce::Font::bold));
     reverbLabel.setJustificationType(juce::Justification::centred);
+    reverbLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(reverbLabel);
     
     auto setupSlider = [this](juce::Slider& slider, const juce::String& paramID) {
         slider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
         slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-        slider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::cyan);
-        slider.setColour(juce::Slider::thumbColourId, juce::Colours::white);
+        slider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+        slider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
         addAndMakeVisible(slider);
         sliderAttachments.push_back(
             std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -33,6 +37,7 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     delayLabel.setText("DELAY", juce::dontSendNotification);
     delayLabel.setFont(juce::Font(20.0f, juce::Font::bold));
     delayLabel.setJustificationType(juce::Justification::centred);
+    delayLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(delayLabel);
     
     setupSlider(delayMixSlider, "delayMix");
@@ -43,6 +48,7 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     chorusLabel.setText("CHORUS", juce::dontSendNotification);
     chorusLabel.setFont(juce::Font(20.0f, juce::Font::bold));
     chorusLabel.setJustificationType(juce::Justification::centred);
+    chorusLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(chorusLabel);
     
     setupSlider(chorusMixSlider, "chorusMix");
@@ -51,7 +57,9 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     setupSlider(chorusCenterDelaySlider, "chorusCenterDelay");
 }
 
-BombFXAudioProcessorEditor::~BombFXAudioProcessorEditor() {}
+BombFXAudioProcessorEditor::~BombFXAudioProcessorEditor() {
+    setLookAndFeel(nullptr);
+}
 
 void BombFXAudioProcessorEditor::paint(juce::Graphics& g) {
     // Slick dark gradient background

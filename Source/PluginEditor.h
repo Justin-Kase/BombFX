@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "PluginProcessor.h"
+#include "BombFXLookAndFeel.h"
 
 class BombFXAudioProcessorEditor : public juce::AudioProcessorEditor {
 public:
@@ -13,6 +14,7 @@ public:
 
 private:
     BombFXAudioProcessor& audioProcessor;
+    BombFXLookAndFeel customLookAndFeel;
     
     // Reverb controls
     juce::Slider reverbMixSlider;
