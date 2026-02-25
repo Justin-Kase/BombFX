@@ -1,6 +1,6 @@
 # Bomb FX 💣
 
-A modern VST3/AU audio effects plugin built with JUCE, featuring four high-quality effects with independent mix controls and a striking chrome-and-purple UI.
+A modern VST3/AU audio effects plugin built with JUCE, featuring four high-quality effects with independent mix controls, a striking chrome-and-purple UI, and full preset management.
 
 ## Features
 
@@ -13,11 +13,14 @@ A modern VST3/AU audio effects plugin built with JUCE, featuring four high-quali
 
 ### 🎨 Premium UI
 
-- **Chrome knobs** with metallic gradients and 3D highlights
-- **Purple LED indicators** with glow effects
+- **Chrome knobs** with metallic gradients, 3D highlights, and center caps
+- **Purple LED indicators** with glow effects and white pointers
 - **Vertical mix faders** for each effect (mixer console style)
-- **Dark gradient background** with cyan section dividers
-- **Custom branding** with logo integration
+- **Enhanced gradient background** with noise texture and section glows
+- **Section backgrounds** with rounded corners and purple glow borders
+- **Gradient dividers** with elegant fade effects
+- **Custom branding** with logo and enhanced title styling
+- **Parameter labels** above every knob for clarity
 
 ### 🎚️ Signal Chain
 
@@ -29,30 +32,60 @@ All three time-based effects process in parallel with independent mix controls, 
 
 ### 🎯 Presets
 
-**15 factory presets** organized by category:
+**27 factory presets** organized by category:
 
-**Reverb:**
+**Reverb (6):**
 - Cathedral — Large hall with long decay
 - Small Room — Tight, intimate space
 - Vocal Plate — Classic plate reverb
 - Huge Hall — Massive concert hall
+- Dark Chamber — Dark, damped reverb with LP filter
+- Spring Tank — Vintage spring reverb with BP filter
 
-**Delay:**
+**Delay (6):**
 - Slapback — Quick, tight echo
 - Dub Echo — Spacey feedback delay
 - Ping Pong — Stereo bouncing delay
 - Dotted Eighth — Rhythmic echo
+- Triplet Delay — 333ms triplet timing
+- Long Tail — 1.2s long delay with LP filter
 
-**Chorus:**
+**Chorus (6):**
 - Lush Chorus — Thick, wide modulation
 - Subtle Shimmer — Light movement
 - Wide Stereo — Expansive stereo field
 - Studio Thickener — Professional doubling
+- Vibrato — Heavy modulation (5Hz, 90% depth)
+- Ensemble — Classic ensemble chorus
 
-**Combo:**
+**Combo (9):**
 - Ambient Space — Reverb + delay + chorus blend
 - Dream Machine — Ethereal, atmospheric
 - Infinite Void — Deep, endless space
+- Vocal Air — Transparent space for vocals with HP filter
+- Synth Pad — Lush reverb+chorus+LP filter
+- Guitar Shimmer — Guitar-optimized reverb+delay+chorus
+- Lo-Fi Vibes — Dark, filtered, warbled character
+- Psychedelic — Heavy effects with BP filter and resonance
+- Epic Drums — Big room for drums with HP filter
+
+### 💾 User Preset Management
+
+**Save your own presets:**
+1. Dial in your perfect sound
+2. Click **Save** button (top-right)
+3. Enter a custom name in the dialog
+4. Preset saved to `~/Documents/BombFX/Presets/`
+
+**Load user presets:**
+1. Click **Refresh** button to scan for new presets
+2. User presets appear under "--- USER PRESETS ---" in dropdown
+3. Select any preset to load instantly
+
+**Share presets:**
+- Presets are saved as `.bombfx` XML files
+- Share files with other users
+- Edit manually if needed (all parameters are human-readable)
 
 ### 🔧 Format Support
 
@@ -120,6 +153,8 @@ cmake --build build --config Release
 - **Drive** (1-10x) — Saturation/distortion amount (soft clipping)
 - **Type** — Filter mode: Low Pass / High Pass / Band Pass
 
+**Total: 17 parameters** (16 float + 1 choice)
+
 ## Architecture
 
 ### Signal Processing
@@ -138,26 +173,39 @@ cmake --build build --config Release
 - **Chorus:** Custom LFO-driven delay modulation
 - **Filter:** JUCE StateVariableTPTFilter with tanh saturation
 
+### Preset System
+
+- **Factory presets:** Hardcoded in C++ for instant loading and reliability
+- **User presets:** XML files stored in `~/Documents/BombFX/Presets/`
+- **XML format:** All parameters saved as attributes with float values
+- **Auto-load:** User presets loaded on plugin startup
+- **Real-time animation:** UI controls animate smoothly when presets change
+
 ## UI Layout
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  [Logo]  BOMB FX                    PRESET: [dropdown ▼]        │
-├─────────┬──────────┬──────────┬──────────┐
-│ REVERB  │  DELAY   │  CHORUS  │  FILTER  │
-│         │          │          │  [Type▼] │
-│  MIX    │   MIX    │   MIX    │   MIX    │
-│  [█]    │   [█]    │   [█]    │   [█]    │
-│  [◯]    │   [◯]    │   [◯]    │   [◯]    │
-│  [◯]    │   [◯]    │   [◯]    │   [◯]    │
-│  [◯]    │          │   [◯]    │   [◯]    │
-└─────────┴──────────┴──────────┴──────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  [Logo]  BOMB FX              PRESET: [dropdown ▼] [Save] [Refresh]         │
+├─────────────┬──────────────┬──────────────┬──────────────┐
+│   REVERB    │    DELAY     │    CHORUS    │    FILTER    │
+│             │              │              │   [Type▼]    │
+│    MIX      │     MIX      │     MIX      │     MIX      │
+│    [█]      │     [█]      │     [█]      │     [█]      │
+│             │              │              │              │
+│   ROOM      │    TIME      │    RATE      │   CUTOFF     │
+│    [◯]      │     [◯]      │     [◯]      │     [◯]      │
+│   DAMP      │    FDBK      │    DEPTH     │    RESO      │
+│    [◯]      │              │     [◯]      │     [◯]      │
+│   WIDTH     │              │    DELAY     │    DRIVE     │
+│    [◯]      │              │     [◯]      │     [◯]      │
+└─────────────┴──────────────┴──────────────┴──────────────┘
 ```
 
 - **Width:** 1100px
 - **Height:** 550px
-- **Chrome knobs:** 70px diameter with purple LED indicators
-- **Mix faders:** 60px wide × 280px tall
+- **Chrome knobs:** 70px diameter with purple LED indicators, 3D gradients, white pointers
+- **Mix faders:** 60px wide × 280px tall, vertical linear sliders
+- **Labels:** 11pt font, light gray (0xffaaaaaa), positioned 15px above controls
 
 ## Development
 
@@ -167,21 +215,21 @@ cmake --build build --config Release
 BombFX/
 ├── CMakeLists.txt
 ├── Source/
-│   ├── PluginProcessor.h/cpp      # Main audio processor
-│   ├── PluginEditor.h/cpp         # UI and layout
-│   ├── BombFXLookAndFeel.h        # Custom knob styling
+│   ├── PluginProcessor.h/cpp      # Main audio processor + APVTS
+│   ├── PluginEditor.h/cpp         # UI, layout, presets
+│   ├── BombFXLookAndFeel.h        # Custom knob/fader styling
 │   └── FX/
 │       ├── ReverbProcessor.h/cpp
 │       ├── DelayProcessor.h/cpp
 │       ├── ChorusProcessor.h/cpp
 │       └── FilterProcessor.h/cpp
 ├── Presets/
-│   ├── Reverb/    # 4 presets
-│   ├── Delay/     # 4 presets
-│   ├── Chorus/    # 4 presets
-│   └── Combo/     # 3 presets
+│   ├── Reverb/    # 6 presets
+│   ├── Delay/     # 6 presets
+│   ├── Chorus/    # 6 presets
+│   └── Combo/     # 9 presets
 └── Resources/
-    └── logo.png   # UI branding
+    └── logo.png   # UI branding (embedded via CMake)
 ```
 
 ### Key Decisions
@@ -189,9 +237,12 @@ BombFX/
 - **JUCE 7.0.12** chosen over 8.0.0 for macOS 15 SDK compatibility
 - **Parallel FX routing** for independent mix control
 - **Filter at end** for creative shaping and character
-- **Direct parameter updates** via `setValueNotifyingHost()` for real-time preset loading
+- **Hardcoded factory presets** for instant loading (faster than XML parsing)
+- **AudioParameterFloat operator=** for clean parameter updates and UI notification
 - **Custom processors** for delay and chorus (precise control)
 - **Soft clipping** in filter drive for musical distortion
+- **Binary data** for logo embedding (juce_add_binary_data)
+- **User preset directory** in Documents folder for easy access/sharing
 
 ## Testing
 
@@ -200,8 +251,23 @@ Load into your DAW (tested with Bitwig Studio):
 2. Load "Bomb FX" from VST3/AU menu
 3. Select a preset from the dropdown
 4. Watch knobs/faders update in real-time
-5. Tweak parameters or switch presets
-6. Automate any parameter from your DAW
+5. Tweak parameters to taste
+6. Click **Save** to store your settings
+7. Click **Refresh** to reload after adding presets
+8. Automate any parameter from your DAW
+
+## Known Issues
+
+None! User preset loading bug fixed in commit 49b6836.
+
+## Contributing
+
+Pull requests welcome! Areas for enhancement:
+- Tempo sync for delay
+- Envelope follower or LFO modulation for filter cutoff
+- Additional combo presets
+- Preset browser UI
+- Undo/redo for preset changes
 
 ## License
 
