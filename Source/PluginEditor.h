@@ -45,9 +45,21 @@ private:
     juce::Label chorusLabel;
     juce::Label chorusMixLabel;
     
+    // Filter controls
+    juce::Slider filterMixSlider;
+    juce::Slider filterCutoffSlider;
+    juce::Slider filterResonanceSlider;
+    juce::Slider filterDriveSlider;
+    juce::ComboBox filterTypeSelector;
+    juce::Label filterLabel;
+    juce::Label filterMixLabel;
+    
     std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> sliderAttachments;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> filterTypeAttachment;
     
     juce::Image logoImage;
+    
+    void setParameterValue(const juce::String& paramID, float value);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BombFXAudioProcessorEditor)
 };

@@ -3,7 +3,7 @@
 BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p) {
     
-    setSize(900, 550);
+    setSize(1100, 550);
     
     // Load logo
     juce::File logoFile = juce::File::getSpecialLocation(juce::File::currentExecutableFile)
@@ -142,6 +142,48 @@ BombFXAudioProcessorEditor::BombFXAudioProcessorEditor(BombFXAudioProcessor& p)
     sliderAttachments.push_back(
         std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
             audioProcessor.getParameters(), "chorusMix", chorusMixSlider));
+    
+    // === FILTER ===
+    filterLabel.setText("FILTER", juce::dontSendNotification);
+    filterLabel.setFont(juce::Font(20.0f, juce::Font::bold));
+    filterLabel.setJustificationType(juce::Justification::centred);
+    filterLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    addAndMakeVisible(filterLabel);
+    
+    filterMixLabel.setText("MIX", juce::dontSendNotification);
+    filterMixLabel.setFont(juce::Font(12.0f));
+    filterMixLabel.setJustificationType(juce::Justification::centred);
+    filterMixLabel.setColour(juce::Label::textColourId, juce::Colour(0xff8b5cf6));
+    addAndMakeVisible(filterMixLabel);
+    
+    setupSlider(filterCutoffSlider, "filterCutoff");
+    setupSlider(filterResonanceSlider, "filterResonance");
+    setupSlider(filterDriveSlider, "filterDrive");
+    
+    // Filter mix fader
+    filterMixSlider.setSliderStyle(juce::Slider::LinearVertical);
+    filterMixSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    filterMixSlider.setColour(juce::Slider::trackColourId, juce::Colour(0xff2a2a3e));
+    filterMixSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xff8b5cf6));
+    filterMixSlider.setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
+    filterMixSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+    addAndMakeVisible(filterMixSlider);
+    sliderAttachments.push_back(
+        std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+            audioProcessor.getParameters(), "filterMix", filterMixSlider));
+    
+    // Filter type selector
+    filterTypeSelector.addItem("Low Pass", 1);
+    filterTypeSelector.addItem("High Pass", 2);
+    filterTypeSelector.addItem("Band Pass", 3);
+    filterTypeSelector.setSelectedId(1);
+    filterTypeSelector.setColour(juce::ComboBox::backgroundColourId, juce::Colour(0xff2a2a3e));
+    filterTypeSelector.setColour(juce::ComboBox::textColourId, juce::Colours::white);
+    filterTypeSelector.setColour(juce::ComboBox::outlineColourId, juce::Colour(0xff8b5cf6));
+    filterTypeSelector.setColour(juce::ComboBox::arrowColourId, juce::Colour(0xff8b5cf6));
+    addAndMakeVisible(filterTypeSelector);
+    filterTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.getParameters(), "filterType", filterTypeSelector);
 }
 
 void BombFXAudioProcessorEditor::populatePresets() {
@@ -167,6 +209,11 @@ void BombFXAudioProcessorEditor::populatePresets() {
     presetSelector.addItem("Ambient Space", 13);
     presetSelector.addItem("Dream Machine", 14);
     presetSelector.addItem("Infinite Void", 15);
+}
+
+void BombFXAudioProcessorEditor::setParameterValue(const juce::String& paramID, float value) {
+    if (auto* param = audioProcessor.getParameters().getParameter(paramID))
+        param->setValueNotifyingHost(value);
 }
 
 void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
@@ -202,52 +249,39 @@ void BombFXAudioProcessorEditor::loadPreset(const juce::String& presetName) {
     if (!xml)
         return;
     
-    auto& params = audioProcessor.getParameters();
+    // Read and set each parameter - this will update both audio processor and UI
+    if (auto* elem = xml->getChildByName("reverbMix"))
+        setParameterValue("reverbMix", elem->getAllSubText().getFloatValue());
     
-    // Manually read each parameter from XML
-    if (auto* reverbMix = xml->getChildByName("reverbMix"))
-        if (auto* param = params.getParameter("reverbMix"))
-            param->setValueNotifyingHost(reverbMix->getAllSubText().getFloatValue());
+    if (auto* elem = xml->getChildByName("reverbRoomSize"))
+        setParameterValue("reverbRoomSize", elem->getAllSubText().getFloatValue());
     
-    if (auto* reverbRoomSize = xml->getChildByName("reverbRoomSize"))
-        if (auto* param = params.getParameter("reverbRoomSize"))
-            param->setValueNotifyingHost(reverbRoomSize->getAllSubText().getFloatValue());
+    if (auto* elem = xml->getChildByName("reverbDamping"))
+        setParameterValue("reverbDamping", elem->getAllSubText().getFloatValue());
     
-    if (auto* reverbDamping = xml->getChildByName("reverbDamping"))
-        if (auto* param = params.getParameter("reverbDamping"))
-            param->setValueNotifyingHost(reverbDamping->getAllSubText().getFloatValue());
+    if (auto* elem = xml->getChildByName("reverbWidth"))
+        setParameterValue("reverbWidth", elem->getAllSubText().getFloatValue());
     
-    if (auto* reverbWidth = xml->getChildByName("reverbWidth"))
-        if (auto* param = params.getParameter("reverbWidth"))
-            param->setValueNotifyingHost(reverbWidth->getAllSubText().getFloatValue());
+    if (auto* elem = xml->getChildByName("delayMix"))
+        setParameterValue("delayMix", elem->getAllSubText().getFloatValue());
     
-    if (auto* delayMix = xml->getChildByName("delayMix"))
-        if (auto* param = params.getParameter("delayMix"))
-            param->setValueNotifyingHost(delayMix->getAllSubText().getFloatValue());
+    if (auto* elem = xml->getChildByName("delayTime"))
+        setParameterValue("delayTime", elem->getAllSubText().getFloatValue() / 2000.0f); // Normalize to 0-1
     
-    if (auto* delayTime = xml->getChildByName("delayTime"))
-        if (auto* param = params.getParameter("delayTime"))
-            param->setValueNotifyingHost(delayTime->getAllSubText().getFloatValue() / 2000.0f); // Normalize
+    if (auto* elem = xml->getChildByName("delayFeedback"))
+        setParameterValue("delayFeedback", elem->getAllSubText().getFloatValue() / 0.95f); // Normalize to 0-1
     
-    if (auto* delayFeedback = xml->getChildByName("delayFeedback"))
-        if (auto* param = params.getParameter("delayFeedback"))
-            param->setValueNotifyingHost(delayFeedback->getAllSubText().getFloatValue());
+    if (auto* elem = xml->getChildByName("chorusMix"))
+        setParameterValue("chorusMix", elem->getAllSubText().getFloatValue());
     
-    if (auto* chorusMix = xml->getChildByName("chorusMix"))
-        if (auto* param = params.getParameter("chorusMix"))
-            param->setValueNotifyingHost(chorusMix->getAllSubText().getFloatValue());
+    if (auto* elem = xml->getChildByName("chorusRate"))
+        setParameterValue("chorusRate", (elem->getAllSubText().getFloatValue() - 0.1f) / 9.9f); // Normalize to 0-1
     
-    if (auto* chorusRate = xml->getChildByName("chorusRate"))
-        if (auto* param = params.getParameter("chorusRate"))
-            param->setValueNotifyingHost((chorusRate->getAllSubText().getFloatValue() - 0.1f) / 9.9f); // Normalize
+    if (auto* elem = xml->getChildByName("chorusDepth"))
+        setParameterValue("chorusDepth", elem->getAllSubText().getFloatValue());
     
-    if (auto* chorusDepth = xml->getChildByName("chorusDepth"))
-        if (auto* param = params.getParameter("chorusDepth"))
-            param->setValueNotifyingHost(chorusDepth->getAllSubText().getFloatValue());
-    
-    if (auto* chorusCenterDelay = xml->getChildByName("chorusCenterDelay"))
-        if (auto* param = params.getParameter("chorusCenterDelay"))
-            param->setValueNotifyingHost((chorusCenterDelay->getAllSubText().getFloatValue() - 7.0f) / 23.0f); // Normalize
+    if (auto* elem = xml->getChildByName("chorusCenterDelay"))
+        setParameterValue("chorusCenterDelay", (elem->getAllSubText().getFloatValue() - 7.0f) / 23.0f); // Normalize to 0-1
 }
 
 BombFXAudioProcessorEditor::~BombFXAudioProcessorEditor() {
@@ -284,8 +318,9 @@ void BombFXAudioProcessorEditor::paint(juce::Graphics& g) {
     
     // Section dividers
     g.setColour(juce::Colour(0xff00d4ff).withAlpha(0.3f));
-    g.drawLine(300, 110, 300, getHeight() - 20, 2.0f);
-    g.drawLine(600, 110, 600, getHeight() - 20, 2.0f);
+    g.drawLine(280, 110, 280, getHeight() - 20, 2.0f);
+    g.drawLine(530, 110, 530, getHeight() - 20, 2.0f);
+    g.drawLine(780, 110, 780, getHeight() - 20, 2.0f);
 }
 
 void BombFXAudioProcessorEditor::resized() {
@@ -302,7 +337,7 @@ void BombFXAudioProcessorEditor::resized() {
     bounds.removeFromTop(40); // Spacing
     bounds.reduce(20, 20);
     
-    auto sectionWidth = bounds.getWidth() / 3;
+    auto sectionWidth = bounds.getWidth() / 4; // Now 4 sections
     
     // === REVERB ===
     auto reverbArea = bounds.removeFromLeft(sectionWidth);
@@ -317,8 +352,8 @@ void BombFXAudioProcessorEditor::resized() {
     reverbMixSlider.setBounds(reverbLeft.removeFromTop(280).reduced(15, 0));
     
     // Knobs on the right
-    auto reverbKnobs = reverbContent.removeFromLeft(200);
-    int knobSize = 80;
+    auto reverbKnobs = reverbContent.removeFromLeft(180);
+    int knobSize = 70;
     
     auto reverbRow1 = reverbKnobs.removeFromTop(knobSize + 30);
     reverbRoomSizeSlider.setBounds(reverbRow1.removeFromLeft(knobSize + 10).withSizeKeepingCentre(knobSize, knobSize));
@@ -339,14 +374,14 @@ void BombFXAudioProcessorEditor::resized() {
     delayLeft.removeFromTop(5);
     delayMixSlider.setBounds(delayLeft.removeFromTop(280).reduced(15, 0));
     
-    auto delayKnobs = delayContent.removeFromLeft(200);
+    auto delayKnobs = delayContent.removeFromLeft(180);
     
     auto delayRow1 = delayKnobs.removeFromTop(knobSize + 30);
     delayTimeSlider.setBounds(delayRow1.removeFromLeft(knobSize + 10).withSizeKeepingCentre(knobSize, knobSize));
     delayFeedbackSlider.setBounds(delayRow1.withSizeKeepingCentre(knobSize, knobSize));
     
     // === CHORUS ===
-    auto chorusArea = bounds;
+    auto chorusArea = bounds.removeFromLeft(sectionWidth);
     chorusLabel.setBounds(chorusArea.removeFromTop(30));
     chorusArea.removeFromTop(10);
     
@@ -357,7 +392,7 @@ void BombFXAudioProcessorEditor::resized() {
     chorusLeft.removeFromTop(5);
     chorusMixSlider.setBounds(chorusLeft.removeFromTop(280).reduced(15, 0));
     
-    auto chorusKnobs = chorusContent.removeFromLeft(200);
+    auto chorusKnobs = chorusContent.removeFromLeft(180);
     
     auto chorusRow1 = chorusKnobs.removeFromTop(knobSize + 30);
     chorusRateSlider.setBounds(chorusRow1.removeFromLeft(knobSize + 10).withSizeKeepingCentre(knobSize, knobSize));
@@ -365,4 +400,29 @@ void BombFXAudioProcessorEditor::resized() {
     
     chorusKnobs.removeFromTop(10);
     chorusCenterDelaySlider.setBounds(chorusKnobs.removeFromTop(knobSize + 30).withSizeKeepingCentre(knobSize, knobSize));
+    
+    // === FILTER ===
+    auto filterArea = bounds;
+    filterLabel.setBounds(filterArea.removeFromTop(30));
+    filterArea.removeFromTop(10);
+    
+    auto filterContent = filterArea.reduced(10);
+    auto filterLeft = filterContent.removeFromLeft(60);
+    
+    filterMixLabel.setBounds(filterLeft.removeFromTop(15));
+    filterLeft.removeFromTop(5);
+    filterMixSlider.setBounds(filterLeft.removeFromTop(280).reduced(15, 0));
+    
+    auto filterKnobs = filterContent.removeFromLeft(180);
+    
+    // Filter type selector at top
+    filterTypeSelector.setBounds(filterKnobs.removeFromTop(30).reduced(5, 0));
+    filterKnobs.removeFromTop(10);
+    
+    auto filterRow1 = filterKnobs.removeFromTop(knobSize + 30);
+    filterCutoffSlider.setBounds(filterRow1.removeFromLeft(knobSize + 10).withSizeKeepingCentre(knobSize, knobSize));
+    filterResonanceSlider.setBounds(filterRow1.withSizeKeepingCentre(knobSize, knobSize));
+    
+    filterKnobs.removeFromTop(10);
+    filterDriveSlider.setBounds(filterKnobs.removeFromTop(knobSize + 30).withSizeKeepingCentre(knobSize, knobSize));
 }

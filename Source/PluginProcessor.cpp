@@ -21,6 +21,14 @@ static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     layout.add(std::make_unique<juce::AudioParameterFloat>("chorusDepth", "Chorus Depth", 0.0f, 1.0f, 0.5f));
     layout.add(std::make_unique<juce::AudioParameterFloat>("chorusCenterDelay", "Chorus Delay", 7.0f, 30.0f, 15.0f));
     
+    // Filter
+    layout.add(std::make_unique<juce::AudioParameterFloat>("filterMix", "Filter Mix", 0.0f, 1.0f, 0.5f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>("filterCutoff", "Cutoff", 20.0f, 20000.0f, 2000.0f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>("filterResonance", "Resonance", 0.0f, 1.0f, 0.3f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>("filterDrive", "Drive", 1.0f, 10.0f, 1.0f));
+    layout.add(std::make_unique<juce::AudioParameterChoice>("filterType", "Filter Type", 
+        juce::StringArray{"Low Pass", "High Pass", "Band Pass"}, 0));
+    
     return layout;
 }
 
@@ -53,6 +61,7 @@ void BombFXAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     reverbProcessor.prepare(spec);
     delayProcessor.prepare(spec);
     chorusProcessor.prepare(spec);
+    filterProcessor.prepare(spec);
     
     reverbBuffer.setSize(spec.numChannels, samplesPerBlock);
     delayBuffer.setSize(spec.numChannels, samplesPerBlock);
@@ -63,6 +72,7 @@ void BombFXAudioProcessor::releaseResources() {
     reverbProcessor.reset();
     delayProcessor.reset();
     chorusProcessor.reset();
+    filterProcessor.reset();
 }
 
 void BombFXAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) {
@@ -112,6 +122,19 @@ void BombFXAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::
         buffer.addFrom(ch, 0, delayBuffer, ch, 0, numSamples, delayMix);
         buffer.addFrom(ch, 0, chorusBuffer, ch, 0, numSamples, chorusMix);
     }
+    
+    // Apply filter at the end of the chain
+    float filterMix = parameters.getRawParameterValue("filterMix")->load();
+    filterProcessor.setCutoff(parameters.getRawParameterValue("filterCutoff")->load());
+    filterProcessor.setResonance(parameters.getRawParameterValue("filterResonance")->load());
+    filterProcessor.setDrive(parameters.getRawParameterValue("filterDrive")->load());
+    filterProcessor.setWetLevel(filterMix);
+    filterProcessor.setDryLevel(1.0f - filterMix);
+    
+    int filterTypeIndex = static_cast<int>(parameters.getRawParameterValue("filterType")->load());
+    filterProcessor.setFilterType(static_cast<FilterProcessor::FilterType>(filterTypeIndex));
+    
+    filterProcessor.process(buffer);
 }
 
 bool BombFXAudioProcessor::hasEditor() const { return true; }

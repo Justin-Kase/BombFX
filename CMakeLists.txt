@@ -43,6 +43,7 @@ target_sources(BombFX PRIVATE
     Source/FX/ReverbProcessor.cpp
     Source/FX/DelayProcessor.cpp
     Source/FX/ChorusProcessor.cpp
+    Source/FX/FilterProcessor.cpp
 )
 
 # JUCE modules

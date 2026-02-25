@@ -3,6 +3,7 @@
 #include "FX/ReverbProcessor.h"
 #include "FX/DelayProcessor.h"
 #include "FX/ChorusProcessor.h"
+#include "FX/FilterProcessor.h"
 
 class BombFXAudioProcessor : public juce::AudioProcessor {
 public:
@@ -40,6 +41,7 @@ private:
     ReverbProcessor reverbProcessor;
     DelayProcessor delayProcessor;
     ChorusProcessor chorusProcessor;
+    FilterProcessor filterProcessor;
     
     // Temp buffers for parallel processing
     juce::AudioBuffer<float> reverbBuffer;
