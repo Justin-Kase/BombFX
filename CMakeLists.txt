@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 
-# Force macOS 14 SDK compatibility BEFORE project() - JUCE 7.x not yet updated for macOS 15
+# macOS deployment target
 if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version" FORCE)
-    # Work around deprecated API errors in JUCE 7 on macOS 15 SDK
-    add_compile_definitions(MAC_OS_VERSION_MAX_ALLOWED=MAC_OS_VERSION_14_0)
 endif()
 
 project(BombFX VERSION 1.0.0)
@@ -17,7 +15,7 @@ include(FetchContent)
 FetchContent_Declare(
   JUCE
   GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-  GIT_TAG 7.0.12
+  GIT_TAG 8.0.4
 )
 FetchContent_MakeAvailable(JUCE)
 
