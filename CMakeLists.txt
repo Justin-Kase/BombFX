@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 3.22)
+
+# Force macOS 14 SDK compatibility BEFORE project() - JUCE 7.x not yet updated for macOS 15
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version" FORCE)
+    # Suppress deprecation warnings for macOS 15 SDK
+    add_compile_options(-Wno-deprecated-declarations)
+endif()
+
 project(BombFX VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Force macOS 14 SDK compatibility (JUCE 7.x not yet updated for macOS 15)
-if(APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "Minimum macOS version" FORCE)
-endif()
 
 # JUCE framework (using CPM or FetchContent)
 include(FetchContent)
